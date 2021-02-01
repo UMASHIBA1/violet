@@ -54,7 +54,7 @@ impl Parser {
 
     // Consume and discard zero or more whitespace characters.
     fn consume_whitespace(&mut self) {
-        self.consume_while(CharExt::is_whitespace);
+        self.consume_while(char::is_whitespace);
     }
 
     fn parse_attributes(&mut self) -> dom::AttrMap {
@@ -73,13 +73,13 @@ impl Parser {
     // Parse a tag or attribute name.
     fn parse_tag_name(&mut self) -> String {
         self.consume_while(|c| match c {
-            'a'...'z' | 'A'...'Z' | '0'...'9' => true,
+            'a'..='z' | 'A'..='Z' | '0'..='9' => true,
             _ => false
         })
     }
 
     fn parse_text(&mut self) -> dom::Node {
-        dom::text(selfl.consume_while(|c| c != '<'))
+        dom::text(self.consume_while(|c| c != '<'))
     }
 
     fn parse_element(&mut self) -> dom::Node {
@@ -126,6 +126,51 @@ impl Parser {
         } else {
             dom::elem("html".to_string(), HashMap::new(), nodes)
         }
+    }
+
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::Parser;
+    use crate::dom::{elem, Node};
+    use std::collections::HashMap;
+
+    fn create_div_element() -> Node {
+        elem("div".to_string(), HashMap::new(), vec![])
+    }
+
+    #[test]
+    fn parse_only_html_tag() {
+        let target_str = "<html></html>".to_string();
+        let parsed_dom = Parser::parse(target_str);
+        let expected_dom = elem("html".to_string(), HashMap::new(),vec![]);
+        assert_eq!(parsed_dom, expected_dom);
+    }
+
+    #[test]
+    fn parse_html_and_body() {
+        let target_str = "<html><body></body></html>".to_string();
+        let parsed_dom = Parser::parse(target_str);
+        let expected_dom = elem("html".to_string(), HashMap::new(),vec![elem("body".to_string(), HashMap::new(), vec![])]);
+        assert_eq!(parsed_dom, expected_dom);
+    }
+
+    #[test]
+    fn parse_one_div_element_dom() {
+        let target_str = "<html><body><div></div></body></html>".to_string();
+        let parsed_dom = Parser::parse(target_str);
+        let expected_dom = elem("html".to_string(), HashMap::new(),vec![elem("body".to_string(), HashMap::new(), vec![elem("div".to_string(), HashMap::new(), vec![])])]);
+        assert_eq!(parsed_dom, expected_dom);
+    }
+
+    #[test]
+    fn parse_multi_div_element_dom() {
+        let target_str = "<html><body><div></div><div></div><div></div></body></html>".to_string();
+        let parsed_dom = Parser::parse(target_str);
+        let expected_dom = elem("html".to_string(), HashMap::new(),vec![elem("body".to_string(), HashMap::new(), vec![create_div_element(), create_div_element(), create_div_element()])]);
+        assert_eq!(parsed_dom, expected_dom);
     }
 
 }
