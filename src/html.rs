@@ -134,7 +134,7 @@ impl Parser {
 #[cfg(test)]
 mod tests {
     use super::Parser;
-    use crate::dom::{elem, Node};
+    use crate::dom::{elem, Node, text};
     use std::collections::HashMap;
 
     fn create_div_element() -> Node {
@@ -170,6 +170,20 @@ mod tests {
         let target_str = "<html><body><div></div><div></div><div></div></body></html>".to_string();
         let parsed_dom = Parser::parse(target_str);
         let expected_dom = elem("html".to_string(), HashMap::new(),vec![elem("body".to_string(), HashMap::new(), vec![create_div_element(), create_div_element(), create_div_element()])]);
+        assert_eq!(parsed_dom, expected_dom);
+    }
+
+    #[test]
+    fn parse_text_node_dom() {
+        let target_str = "<html><body><div>sample text</div></body></html>".to_string();
+        let parsed_dom = Parser::parse(target_str);
+        let expected_dom = elem("html".to_string(), HashMap::new(),vec![
+            elem("body".to_string(), HashMap::new(), vec![
+                elem("div".to_string(), HashMap::new(), vec![
+                    text("sample text".to_string())
+                ]),
+            ])
+        ]);
         assert_eq!(parsed_dom, expected_dom);
     }
 
