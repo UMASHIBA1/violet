@@ -82,6 +82,7 @@ impl Parser {
         dom::text(self.consume_while(|c| c != '<'))
     }
 
+    // 一つのエレメントノードをパースする
     fn parse_element(&mut self) -> dom::Node {
         assert!(self.consume_char() == '<', "the element does not start with <");
         let tag_name = self.parse_tag_name();
@@ -98,14 +99,34 @@ impl Parser {
         return dom::elem(tag_name, attrs, children);
     }
 
+    fn consume_comment(&mut self) {
+        assert!(self.consume_char() == '<');
+        assert!(self.consume_char() == '!');
+        assert!(self.consume_char() == '-');
+        assert!(self.consume_char() == '-');
+
+        while !self.eof() && !self.starts_with("-->") {
+            self.consume_char();
+        };
+
+        assert!(self.consume_char() == '-');
+        assert!(self.consume_char() == '-');
+        self.consume_whitespace();
+        assert!(self.consume_char() == '>');
+    }
+
+    // NOTE: 一つのノードをパースする
     fn parse_node(&mut self) -> dom::Node {
+        if self.starts_with("<!--") {
+            self.consume_comment();
+        }
         match self.next_char() {
             '<' => self.parse_element(),
             _ => self.parse_text()
         }
     }
 
-    //
+    // NOTE: 複数のノードをパースする
     fn parse_nodes(&mut self) -> Vec<dom::Node> {
         let mut nodes = Vec::new();
         loop {
@@ -184,6 +205,14 @@ mod tests {
                 ]),
             ])
         ]);
+        assert_eq!(parsed_dom, expected_dom);
+    }
+
+    #[test]
+    fn parse_comment_node_dom() {
+        let target_str = "<html><body><!-- sample comment --><div></div></body></html>".to_string();
+        let parsed_dom = Parser::parse(target_str);
+        let expected_dom = elem("html".to_string(), HashMap::new(),vec![elem("body".to_string(), HashMap::new(), vec![elem("div".to_string(), HashMap::new(), vec![])])]);
         assert_eq!(parsed_dom, expected_dom);
     }
 
