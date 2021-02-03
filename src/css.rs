@@ -39,13 +39,14 @@ struct Declaration {
 enum Value {
     Keyword(String),
     Length(f32, Unit),
+    Percentage(f32),
     ColorValue(Color)
 }
 
-// NOTE: 現在pxのみだけど本来はvwとか%とか入る
+// NOTE: 現在pxのみだけど本来はvwとかemとか入る
 #[derive(Clone, Debug, PartialEq)]
 enum Unit {
-    Px,
+    Px
 }
 
 // NOTE: 色の構造体
@@ -170,14 +171,21 @@ impl Parser {
 
     fn parse_value(&mut self) -> Value {
         match self.next_char() {
-            '0'..='9' => self.parse_length(),
+            '0'..='9' => self.parse_start_with_num_value(),
             '#' => self.parse_color(),
             _ => Value::Keyword(self.parse_identifier())
         }
     }
 
-    fn parse_length(&mut self) -> Value {
-        Value::Length(self.parse_float(), self.parse_unit())
+    fn parse_start_with_num_value(&mut self) -> Value {
+        let num_value = self.parse_float();
+        match self.next_char() {
+            '%' => {
+                self.consume_char();
+                Value::Percentage(num_value)
+            },
+            _ => Value::Length(num_value, self.parse_unit())
+        }
     }
 
     fn parse_float(&mut self) -> f32 {
@@ -243,7 +251,6 @@ impl Parser {
     fn consume_whitespace(&mut self) {
         self.consume_while(char::is_whitespace);
     }
-
 }
 
 fn valid_identifier_char(c: char) -> bool {
@@ -329,6 +336,16 @@ mod tests {
     }
 
     #[test]
+    fn parse_percentage_declaration() {
+        let target_str = "#id {width: 100%;}".to_string();
+        let parsed_css = parse(target_str);
+        let selector = Selector::Simple(SimpleSelector{tag_name: None, id: Some("id".to_string()), class: vec![]});
+        let declaration = Declaration {name: "width".to_string(), value: Value::Percentage(100.0)};
+        let expected_css = Stylesheet {rules: vec![Rule {selectors: vec![selector], declarations: vec![declaration]}]};
+        assert_eq!(parsed_css, expected_css);
+    }
+
+    #[test]
     fn parse_multi_rules() {
         let target_str = "#id {margin: auto;} .class {margin: auto;}".to_string();
         let parsed_css = parse(target_str);
@@ -340,5 +357,7 @@ mod tests {
         let expected_css = Stylesheet {rules: vec![id_rule, class_rule]};
         assert_eq!(parsed_css, expected_css);
     }
+
+
 
 }
