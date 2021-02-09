@@ -3,40 +3,40 @@
 
 #[derive(Debug, PartialEq)]
 pub struct Stylesheet {
-    rules: Vec<Rule>
+    pub rules: Vec<Rule>
 }
 
 // 一個のセレクタとdeclaration達の塊
 #[derive(Clone, Debug, PartialEq)]
-struct Rule {
-    selectors: Vec<Selector>,
-    declarations: Vec<Declaration>
+pub struct Rule {
+    pub selectors: Vec<Selector>,
+    pub declarations: Vec<Declaration>
 }
 
 // NOTE: 今はSimpleSelectorだけだけど今後[href="example.com"]とか追加できるようになる
 #[derive(Clone, Debug, PartialEq)]
-enum Selector {
+pub enum Selector {
     Simple(SimpleSelector)
 }
 
 // NOTE: #id, .class, bodyみたいな部分
 #[derive(Clone, Debug, PartialEq)]
-struct SimpleSelector {
-    tag_name: Option<String>,
-    id: Option<String>,
-    class: Vec<String>
+pub struct SimpleSelector {
+    pub tag_name: Option<String>,
+    pub id: Option<String>,
+    pub class: Vec<String>
 }
 
 // NOTE: margin: auto;
 #[derive(Clone,Debug, PartialEq)]
-struct Declaration {
-    name: String,
-    value: Value
+pub struct Declaration {
+    pub name: String,
+    pub value: Value
 }
 
 // NOTE: margin: auto; のautoの部分
 #[derive(Clone,Debug, PartialEq)]
-enum Value {
+pub enum Value {
     Keyword(String),
     Length(f32, Unit),
     Percentage(f32),
@@ -45,25 +45,26 @@ enum Value {
 
 // NOTE: 現在pxのみだけど本来はvwとかemとか入る
 #[derive(Clone, Debug, PartialEq)]
-enum Unit {
+pub enum Unit {
     Px
 }
 
 // NOTE: 色の構造体
 #[derive(Clone,Debug, PartialEq)]
-struct Color {
-    r: u8,
-    g: u8,
-    b: u8,
-    a: u8
-}
-
-struct Parser {
-    pos: usize,
-    input: String
+pub struct Color {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8
 }
 
 pub type Specificity = (usize, usize, usize);
+
+pub fn parse(source: String) -> Stylesheet {
+    let mut parser = Parser {pos: 0, input: source};
+    Stylesheet {rules: parser.parse_rules()}
+}
+
 
 impl Selector {
     pub fn specificity(&self) -> Specificity {
@@ -75,10 +76,14 @@ impl Selector {
     }
 }
 
-pub fn parse(source: String) -> Stylesheet {
-    let mut parser = Parser {pos: 0, input: source};
-    Stylesheet {rules: parser.parse_rules()}
+
+
+struct Parser {
+    pos: usize,
+    input: String
 }
+
+
 
 impl Parser {
 
@@ -357,7 +362,5 @@ mod tests {
         let expected_css = Stylesheet {rules: vec![id_rule, class_rule]};
         assert_eq!(parsed_css, expected_css);
     }
-
-
 
 }
