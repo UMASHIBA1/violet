@@ -109,6 +109,31 @@ mod tests {
         StyledNode {node, specified_values, children}
     }
 
+    fn create_simple_selector_rule(selector_data: Vec<(Option<&str>, Option<&str>, Vec<&str>)>, declaration_data: Vec<(&str, Value)>) -> Rule {
+        let mut selectors: Vec<Selector> = vec![];
+        let mut declarations: Vec<Declaration> = vec![];
+
+        for data in selector_data {
+            let selector = Selector::Simple(SimpleSelector {
+                tag_name: data.0.and_then(|x| Some(x.to_string())), id: data.1.and_then(|x| Some(x.to_string())), class: data.2.iter().map(|x|x.to_string()).collect()
+            });
+            selectors.push(selector);
+        }
+
+        for data in declaration_data {
+            let declaration = Declaration {
+                name: data.0.to_string(),
+                value: data.1
+            };
+            declarations.push(declaration);
+        }
+
+        Rule {
+            selectors,
+            declarations
+        }
+    }
+
     #[test]
     fn test_merge_one_div_and_one_rule() {
 
@@ -117,13 +142,9 @@ mod tests {
         let html = create_element_node("html".to_string(), AttrMap::new(), vec![body.clone()]);
 
         let target_stylesheet = Stylesheet {rules: vec![
-            Rule {
-                selectors: vec![ Selector::Simple(SimpleSelector {tag_name: Some("div".to_string()), id: None, class: vec![]})],
-                declarations: vec![
-                    Declaration {name: "margin".to_string(), value: Value::Keyword("auto".to_string())},
-                    Declaration {name: "padding".to_string(), value: Value::Length(4.0, Unit::Px)}
-                ]
-            }
+            create_simple_selector_rule(vec![(Some("div"), None, vec![])], vec![
+            ("margin", Value::Keyword("auto".to_string())), ("padding", Value::Length(4.0, Unit::Px))
+            ])
         ]};
         let styled_html = style_tree(&html, &target_stylesheet);
 
@@ -136,7 +157,6 @@ mod tests {
         let expected_styled_html = create_styled_node(&html, PropertyMap::new(), vec![expected_styled_body]);
 
         assert_eq!(styled_html, expected_styled_html);
-
     }
 
 }
