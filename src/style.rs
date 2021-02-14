@@ -190,15 +190,15 @@ mod tests {
 
     #[test]
     fn test_merge_style_rule_by_class() {
-        let id = "id1".to_string();
+        let class = "class1".to_string();
         let mut target_attr = AttrMap::new();
-        target_attr.insert("id".to_string(), id.clone());
+        target_attr.insert("class".to_string(), class.clone());
         let target_element = create_element_node("div".to_string(), target_attr, vec![]);
         let body = create_element_node("body".to_string(), AttrMap::new(), vec![target_element.clone()]);
         let html = create_element_node("html".to_string(), AttrMap::new(), vec![body.clone()]);
 
         let target_stylesheet = Stylesheet {rules: vec![
-            create_simple_selector_rule(vec![(None, Some(id.clone().as_str()), vec![])], vec![
+            create_simple_selector_rule(vec![(None, None, vec![class.as_str()])], vec![
                 ("margin", Value::Keyword("auto".to_string())), ("padding", Value::Length(4.0, Unit::Px))
             ])
         ]};
