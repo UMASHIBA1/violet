@@ -105,59 +105,12 @@ mod tests {
         Node {node_type: this_element, children}
     }
 
-    // fn create_styled_element_node(tag_name: String, attributes: AttrMap, children: Vec<Node>) {
-    //     let this_element = StyledNode {
-    //         node: create_element_node(tag_name, attributes, children),
-    //         specified_values:
-    //     }
-    // }
-
-    // fn create_rule(tag_name: Option<String>, id: Option<String>, class: Vec<String>, declarations: Vec<Declaration>) -> Rule {
-    //     Rule {selectors: vec![Selector::Simple(SimpleSelector {tag_name, id, class})], declarations}
-    // }
-    //
-    // fn setup<'a>() -> (Node, StyledNode<'a>) {
-    //     let body = create_element_node("body".to_string(), AttrMap::new(), vec![]);
-    //     let styled_body: StyledNode<'a> = StyledNode {node: &body.clone(), specified_values: PropertyMap::new(), children: vec![]};
-    //     let html = create_element_node("html".to_string(), AttrMap::new(), vec![body]);
-    //     let styled_html: StyledNode<'a> = StyledNode {node: &html.clone(), specified_values: PropertyMap::new(), children: vec![styled_body]};
-    //
-    //     (html, styled_html)
-    // }
-    //
-    // fn add_to_node_body(added_node: &Node, html_node: &mut Node) {
-    //     html_node.children[0].children.push(added_node.clone());
-    // }
-
-    // fn add_to_styled_body(added_styled_node: &StyledNode, styled_html_node: &mut StyledNode) {
-    //     styled_html_node.children[0].children.push(added_styled_node.clone());
-    // }
+    fn create_styled_node<'a>(node: &'a Node, specified_values: PropertyMap, children: Vec<StyledNode<'a>>) -> StyledNode<'a> {
+        StyledNode {node, specified_values, children}
+    }
 
     #[test]
     fn test_merge_one_div_and_one_rule() {
-
-        // let aaa =   StyledNode {
-        //     node: Node {
-        //         children: [
-        //             Node {
-        //                 children: [Node { children: [], node_type: Element(ElementData { tag_name: "div", attributes: {} }) }],
-        //                 node_type: Element(ElementData { tag_name: "body", attributes: {} }) }
-        //         ],
-        //         node_type: Element(ElementData { tag_name: "html", attributes: {} }) },
-        //     specified_values: {},
-        //     children: [
-        //         StyledNode {
-        //             node: Node {
-        //                 children: [Node { children: [], node_type: Element(ElementData { tag_name: "div", attributes: {} }) }],
-        //                 node_type: Element(ElementData { tag_name: "body", attributes: {} }) },
-        //             specified_values: {},
-        //             children: [StyledNode {
-        //                 node: Node { children: [], node_type: Element(ElementData { tag_name: "div", attributes: {} }) },
-        //                 specified_values: {"padding": Length(4.0, Px), "margin": Keyword("auto")},
-        //                 children: []
-        //             }]
-        //         }]
-        // };
 
         let target_element = create_element_node("div".to_string(), AttrMap::new(), vec![]);
         let body = create_element_node("body".to_string(), AttrMap::new(), vec![target_element.clone()]);
@@ -173,15 +126,14 @@ mod tests {
             }
         ]};
         let styled_html = style_tree(&html, &target_stylesheet);
-        
+
         let mut expected_property_map = PropertyMap::new();
         expected_property_map.insert("margin".to_string(), Value::Keyword("auto".to_string()));
         expected_property_map.insert("padding".to_string(), Value::Length(4.0, Unit::Px));
-        let expected_styled_target_node = StyledNode {node: &target_element.clone(), specified_values: expected_property_map, children: vec![]};
 
-        let expected_styled_body: StyledNode = StyledNode {node: &body.clone(), specified_values: PropertyMap::new(), children: vec![expected_styled_target_node]};
-        let expected_styled_html: StyledNode = StyledNode {node: &html.clone(), specified_values: PropertyMap::new(), children: vec![expected_styled_body]};
-
+        let expected_styled_target_node = create_styled_node(&target_element, expected_property_map, vec![]);
+        let expected_styled_body = create_styled_node(&body, PropertyMap::new(), vec![expected_styled_target_node]);
+        let expected_styled_html = create_styled_node(&html, PropertyMap::new(), vec![expected_styled_body]);
 
         assert_eq!(styled_html, expected_styled_html);
 
