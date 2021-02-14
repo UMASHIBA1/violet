@@ -159,4 +159,64 @@ mod tests {
         assert_eq!(styled_html, expected_styled_html);
     }
 
+    #[test]
+    fn test_merge_style_rule_by_id() {
+        let id = "id1".to_string();
+        let mut target_attr = AttrMap::new();
+        target_attr.insert("id".to_string(), id.clone());
+        let target_element = create_element_node("div".to_string(), target_attr, vec![]);
+        let body = create_element_node("body".to_string(), AttrMap::new(), vec![target_element.clone()]);
+        let html = create_element_node("html".to_string(), AttrMap::new(), vec![body.clone()]);
+
+        let target_stylesheet = Stylesheet {rules: vec![
+            create_simple_selector_rule(vec![(None, Some(id.clone().as_str()), vec![])], vec![
+                ("margin", Value::Keyword("auto".to_string())), ("padding", Value::Length(4.0, Unit::Px))
+            ])
+        ]};
+
+        let styled_html = style_tree(&html, &target_stylesheet);
+
+        let mut expected_property_map = PropertyMap::new();
+        expected_property_map.insert("margin".to_string(), Value::Keyword("auto".to_string()));
+        expected_property_map.insert("padding".to_string(), Value::Length(4.0, Unit::Px));
+
+        let expected_styled_target_node = create_styled_node(&target_element, expected_property_map, vec![]);
+        let expected_styled_body = create_styled_node(&body, PropertyMap::new(), vec![expected_styled_target_node]);
+        let expected_styled_html = create_styled_node(&html, PropertyMap::new(), vec![expected_styled_body]);
+
+        assert_eq!(styled_html, expected_styled_html);
+
+    }
+
+    #[test]
+    fn test_merge_style_rule_by_class() {
+        let id = "id1".to_string();
+        let mut target_attr = AttrMap::new();
+        target_attr.insert("id".to_string(), id.clone());
+        let target_element = create_element_node("div".to_string(), target_attr, vec![]);
+        let body = create_element_node("body".to_string(), AttrMap::new(), vec![target_element.clone()]);
+        let html = create_element_node("html".to_string(), AttrMap::new(), vec![body.clone()]);
+
+        let target_stylesheet = Stylesheet {rules: vec![
+            create_simple_selector_rule(vec![(None, Some(id.clone().as_str()), vec![])], vec![
+                ("margin", Value::Keyword("auto".to_string())), ("padding", Value::Length(4.0, Unit::Px))
+            ])
+        ]};
+
+        let styled_html = style_tree(&html, &target_stylesheet);
+
+        let mut expected_property_map = PropertyMap::new();
+        expected_property_map.insert("margin".to_string(), Value::Keyword("auto".to_string()));
+        expected_property_map.insert("padding".to_string(), Value::Length(4.0, Unit::Px));
+
+        let expected_styled_target_node = create_styled_node(&target_element, expected_property_map, vec![]);
+        let expected_styled_body = create_styled_node(&body, PropertyMap::new(), vec![expected_styled_target_node]);
+        let expected_styled_html = create_styled_node(&html, PropertyMap::new(), vec![expected_styled_body]);
+
+        assert_eq!(styled_html, expected_styled_html);
+
+    }
+
+
+
 }
