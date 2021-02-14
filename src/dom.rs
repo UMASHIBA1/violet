@@ -1,18 +1,18 @@
 use std::collections::{HashMap, HashSet};
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     pub struct Node {
         pub children: Vec<Node>,
         pub node_type: NodeType
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     pub enum NodeType {
         Text(String),
         Element(ElementData)
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     pub struct ElementData {
         pub tag_name: String,
         pub attributes: AttrMap
