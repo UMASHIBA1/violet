@@ -1,7 +1,7 @@
 // NOTE: https://limpet.net/mbrubeck/2014/08/23/toy-layout-engine-4-style.html
 
 use std::collections::{HashMap};
-use crate::css::{Value, Selector, SimpleSelector, Specificity, Rule, Stylesheet};
+use crate::css::{Value, Selector, SimpleSelector, Specificity, Rule, Stylesheet, Unit};
 use crate::dom::{Node, ElementData, NodeType};
 
 pub type PropertyMap = HashMap<String, Value>;
@@ -13,31 +13,68 @@ pub struct StyledNode<'a> {
     children: Vec<StyledNode<'a>>,
 }
 
+const INHERIT_PROPS: [&str; 4] = ["color", "font-size", "font-weight", "line-height"];
 
 pub fn style_tree<'a>(root: &'a Node, stylesheet: &'a Stylesheet) -> StyledNode<'a> {
+    let default_prop_map = create_default_props();
+
+    style_tree_rec(root, stylesheet, &default_prop_map)
+}
+
+fn create_default_props() -> PropertyMap {
+    let mut default_prop_map = PropertyMap::new();
+    default_prop_map.insert("color".to_string(), Value::Keyword("#000000".to_string()));
+    default_prop_map.insert("font-size".to_string(), Value::Length(16.0, Unit::Px));
+    default_prop_map.insert("font-weight".to_string(), Value::Keyword("normal".to_string()));
+    default_prop_map.insert("line-height".to_string(), Value::Keyword("normal".to_string()));
+    default_prop_map
+}
+
+
+
+fn style_tree_rec<'a>(root: &'a Node, stylesheet: &'a Stylesheet, parent_prop_map: &PropertyMap) -> StyledNode<'a> {
+    let specified_values = match root.node_type {
+        NodeType::Element(ref elem) => specified_values(elem, stylesheet, parent_prop_map),
+        NodeType::Text(_) => HashMap::new()
+    };
     StyledNode {
         node: root,
-        specified_values: match root.node_type {
-            NodeType::Element(ref elem) => specified_values(elem, stylesheet),
-            NodeType::Text(_) => HashMap::new()
-        },
-        children: root.children.iter().map(|child| style_tree(child, stylesheet)).collect(),
+        specified_values: specified_values.clone(),
+        children: root.children.iter().map(|child| style_tree_rec(child, stylesheet, &specified_values)).collect(),
     }
 }
 
 // その要素に渡すDeclarationのプロパティ名と値のマップを返す
-fn specified_values(elem: &ElementData, stylesheet: &Stylesheet) -> PropertyMap {
-    let mut values = HashMap::new();
+fn specified_values(elem: &ElementData, stylesheet: &Stylesheet, parent_prop_map: &PropertyMap) -> PropertyMap {
+    let mut values: PropertyMap = HashMap::new();
+
+        // 継承するのがデフォルトの値に対して全部親から値をとる
+        for prop_name in INHERIT_PROPS.iter() {
+            match parent_prop_map.get(&prop_name.to_string()) {
+                Some(x) => {values.insert(prop_name.to_string(), x.clone());},
+                None => ()
+            };
+        }
+
     let mut rules = matching_rules(elem, stylesheet);
 
     rules.sort_by(|&(a, _), &(b,_)| a.cmp(&b));
     for (_, rule) in rules {
         for declaration in &rule.declarations {
-            values.insert(declaration.name.clone(), declaration.value.clone());
+            if declaration.value == Value::Keyword("inherit".to_string()) {
+                let parent_value_opt = parent_prop_map.get(declaration.name.as_str());
+                match parent_value_opt {
+                    Some(x) => {values.insert(declaration.name.clone(), x.clone());},
+                    None => ()
+                };
+            }else {
+                values.insert(declaration.name.clone(), declaration.value.clone());
+            }
         }
     }
     return values;
 }
+
 
 type MatchedRule<'a> = (Specificity, &'a Rule);
 
@@ -80,7 +117,6 @@ fn matches_simple_selector(elem: &ElementData, selector: &SimpleSelector) -> boo
 
     return true;
 }
-
 
 // NOTE: 処理の手順を自分なりにまとめます
 // 目標: そのNodeに対応したCSSのDeclarationを付与した要素のツリー(StyledNode)を作成する
@@ -139,6 +175,15 @@ mod tests {
         }
     }
 
+    fn create_inherit_props_map_for_test() -> PropertyMap {
+        let mut expected_prop_map = PropertyMap::new();
+        expected_prop_map.insert("color".to_string(), Value::Keyword("#000000".to_string()));
+        expected_prop_map.insert("font-size".to_string(), Value::Length(16.0, Unit::Px));
+        expected_prop_map.insert("font-weight".to_string(), Value::Keyword("normal".to_string()));
+        expected_prop_map.insert("line-height".to_string(), Value::Keyword("normal".to_string()));
+        expected_prop_map
+    }
+
     #[test]
     fn test_merge_one_div_and_one_rule() {
 
@@ -153,13 +198,13 @@ mod tests {
         ]};
         let styled_html = style_tree(&html, &target_stylesheet);
 
-        let mut expected_property_map = PropertyMap::new();
+        let mut expected_property_map = create_inherit_props_map_for_test();
         expected_property_map.insert("margin".to_string(), Value::Keyword("auto".to_string()));
         expected_property_map.insert("padding".to_string(), Value::Length(4.0, Unit::Px));
 
         let expected_styled_target_node = create_styled_node(&target_element, expected_property_map, vec![]);
-        let expected_styled_body = create_styled_node(&body, PropertyMap::new(), vec![expected_styled_target_node]);
-        let expected_styled_html = create_styled_node(&html, PropertyMap::new(), vec![expected_styled_body]);
+        let expected_styled_body = create_styled_node(&body, create_inherit_props_map_for_test(), vec![expected_styled_target_node]);
+        let expected_styled_html = create_styled_node(&html, create_inherit_props_map_for_test(), vec![expected_styled_body]);
 
         assert_eq!(styled_html, expected_styled_html);
     }
@@ -181,13 +226,13 @@ mod tests {
 
         let styled_html = style_tree(&html, &target_stylesheet);
 
-        let mut expected_property_map = PropertyMap::new();
+        let mut expected_property_map = create_inherit_props_map_for_test();
         expected_property_map.insert("margin".to_string(), Value::Keyword("auto".to_string()));
         expected_property_map.insert("padding".to_string(), Value::Length(4.0, Unit::Px));
 
         let expected_styled_target_node = create_styled_node(&target_element, expected_property_map, vec![]);
-        let expected_styled_body = create_styled_node(&body, PropertyMap::new(), vec![expected_styled_target_node]);
-        let expected_styled_html = create_styled_node(&html, PropertyMap::new(), vec![expected_styled_body]);
+        let expected_styled_body = create_styled_node(&body, create_inherit_props_map_for_test(), vec![expected_styled_target_node]);
+        let expected_styled_html = create_styled_node(&html, create_inherit_props_map_for_test(), vec![expected_styled_body]);
 
         assert_eq!(styled_html, expected_styled_html);
 
@@ -210,13 +255,13 @@ mod tests {
 
         let styled_html = style_tree(&html, &target_stylesheet);
 
-        let mut expected_property_map = PropertyMap::new();
+        let mut expected_property_map = create_inherit_props_map_for_test();
         expected_property_map.insert("margin".to_string(), Value::Keyword("auto".to_string()));
         expected_property_map.insert("padding".to_string(), Value::Length(4.0, Unit::Px));
 
         let expected_styled_target_node = create_styled_node(&target_element, expected_property_map, vec![]);
-        let expected_styled_body = create_styled_node(&body, PropertyMap::new(), vec![expected_styled_target_node]);
-        let expected_styled_html = create_styled_node(&html, PropertyMap::new(), vec![expected_styled_body]);
+        let expected_styled_body = create_styled_node(&body, create_inherit_props_map_for_test(), vec![expected_styled_target_node]);
+        let expected_styled_html = create_styled_node(&html, create_inherit_props_map_for_test(), vec![expected_styled_body]);
 
         assert_eq!(styled_html, expected_styled_html);
 
@@ -236,14 +281,14 @@ mod tests {
         ]};
         let styled_html = style_tree(&html, &target_stylesheet);
 
-        let mut expected_property_map = PropertyMap::new();
+        let mut expected_property_map = create_inherit_props_map_for_test();
         expected_property_map.insert("margin".to_string(), Value::Keyword("auto".to_string()));
         expected_property_map.insert("padding".to_string(), Value::Length(4.0, Unit::Px));
 
         let expected_styled_text_node = create_styled_node(&text_node, PropertyMap::new(), vec![]);
         let expected_styled_target_node = create_styled_node(&target_element, expected_property_map, vec![expected_styled_text_node]);
-        let expected_styled_body = create_styled_node(&body, PropertyMap::new(), vec![expected_styled_target_node]);
-        let expected_styled_html = create_styled_node(&html, PropertyMap::new(), vec![expected_styled_body]);
+        let expected_styled_body = create_styled_node(&body, create_inherit_props_map_for_test(), vec![expected_styled_target_node]);
+        let expected_styled_html = create_styled_node(&html, create_inherit_props_map_for_test(), vec![expected_styled_body]);
 
         assert_eq!(styled_html, expected_styled_html);
     }
@@ -265,13 +310,13 @@ mod tests {
         ]};
         let styled_html = style_tree(&html, &target_stylesheet);
 
-        let mut expected_property_map = PropertyMap::new();
+        let mut expected_property_map = create_inherit_props_map_for_test();
         expected_property_map.insert("margin".to_string(), Value::Keyword("auto".to_string()));
         expected_property_map.insert("padding".to_string(), Value::Length(4.0, Unit::Px));
 
         let expected_styled_target_node = create_styled_node(&target_element, expected_property_map, vec![]);
-        let expected_styled_body = create_styled_node(&body, PropertyMap::new(), vec![expected_styled_target_node]);
-        let expected_styled_html = create_styled_node(&html, PropertyMap::new(), vec![expected_styled_body]);
+        let expected_styled_body = create_styled_node(&body, create_inherit_props_map_for_test(), vec![expected_styled_target_node]);
+        let expected_styled_html = create_styled_node(&html, create_inherit_props_map_for_test(), vec![expected_styled_body]);
 
         assert_eq!(styled_html, expected_styled_html);
     }
@@ -291,13 +336,13 @@ mod tests {
         ]};
         let styled_html = style_tree(&html, &target_stylesheet);
 
-        let mut expected_property_map = PropertyMap::new();
+        let mut expected_property_map = create_inherit_props_map_for_test();
         expected_property_map.insert("margin".to_string(), Value::Keyword("auto".to_string()));
 
         let expected_styled_target_node1 = create_styled_node(&target_element1, expected_property_map.clone(), vec![]);
         let expected_styled_target_node2 = create_styled_node(&target_element1, expected_property_map, vec![]);
-        let expected_styled_body = create_styled_node(&body, PropertyMap::new(), vec![expected_styled_target_node1, expected_styled_target_node2]);
-        let expected_styled_html = create_styled_node(&html, PropertyMap::new(), vec![expected_styled_body]);
+        let expected_styled_body = create_styled_node(&body, create_inherit_props_map_for_test(), vec![expected_styled_target_node1, expected_styled_target_node2]);
+        let expected_styled_html = create_styled_node(&html, create_inherit_props_map_for_test(), vec![expected_styled_body]);
 
         assert_eq!(styled_html, expected_styled_html);
     }
