@@ -43,6 +43,15 @@ pub enum Value {
     ColorValue(Color)
 }
 
+impl Value {
+    pub fn to_px(&self) -> f32 {
+        match *self {
+            Value::Length(f, Unit::Px) => f,
+            _ => 0.0
+        }
+    }
+}
+
 // NOTE: 現在pxのみだけど本来はvwとかemとか入る
 #[derive(Clone, Debug, PartialEq)]
 pub enum Unit {
