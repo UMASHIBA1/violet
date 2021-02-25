@@ -59,6 +59,13 @@ impl LayoutBox {
 
 }
 
+pub fn layout_tree<'a>(node: &'a StyledNode<'a>, mut containing_block: Dimensions) -> LayoutBox<'a>{
+    containing_block.content.height = 0.0;
+    let mut root_box = build_layout_tree(node);
+    root_box.layout(&containing_block);
+    root_box
+}
+
 // NOTE: StyledNodeをとりあえず全部LayoutBoxに変換する処理
 fn build_layout_tree<'a>(style_node: &'a StyledNode<'a>) -> LayoutBox<'a> {
     let mut root = LayoutBox::new(match style_node.display() {
@@ -259,5 +266,5 @@ impl Rect {
 
 #[cfg(test)]
 mod tests {
-    
+
 }
