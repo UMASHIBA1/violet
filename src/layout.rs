@@ -333,7 +333,7 @@ mod tests {
     #[test]
     fn test_layout_only_block_node_tree() {
         // <div> block {margin: 8.0, padding: 4.0, width: auto}
-        //   <div></div> inline {margin-left: 2.0, width: 100, height: 200}
+        //   <div></div> block {margin-left: 2.0, width: 100, height: 200}
         // </div>
         let child_element = create_element_node("div".to_string(), AttrMap::new(), vec![]);
         let parent_element = create_element_node("div".to_string(), AttrMap::new(), vec![child_element.clone()]);
@@ -394,8 +394,6 @@ mod tests {
 
         assert_eq!(layout, expected_parent_layout_box);
 
-
     }
-
 
 }
