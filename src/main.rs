@@ -4,6 +4,4 @@ mod css;
 mod style;
 mod layout;
 
-fn main() {
-    println!("Hello, world!");
-}
+fn main() {println!("hello world");}

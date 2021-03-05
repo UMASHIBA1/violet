@@ -8,8 +8,8 @@ pub type PropertyMap = HashMap<String, Value>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct StyledNode<'a> {
-    node: &'a Node,
-    specified_values: PropertyMap,
+    pub node: &'a Node,
+    pub specified_values: PropertyMap,
     pub children: Vec<StyledNode<'a>>,
 }
 
@@ -19,7 +19,7 @@ pub enum Display {
     None
 }
 
-impl StyledNode {
+impl<'a> StyledNode<'a> {
     pub fn value(&self, name: &str) -> Option<Value> {
         self.specified_values.get(name).map(|v| v.clone())
     }
