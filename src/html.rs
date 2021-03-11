@@ -6,6 +6,16 @@ struct Parser {
     input: String,
 }
 
+pub fn parse(source: String) -> dom::Node {
+    let mut nodes = Parser {pos: 0, input: source}.parse_nodes();
+
+    if nodes.len() == 1 {
+        nodes.swap_remove(0)
+    } else {
+        dom::elem("html".to_string(), HashMap::new(), nodes)
+    }
+}
+
 impl Parser {
 
     fn next_char(&self) -> char {
@@ -139,22 +149,12 @@ impl Parser {
         return nodes;
     }
 
-    pub fn parse(source: String) -> dom::Node {
-        let mut nodes = Parser {pos: 0, input: source}.parse_nodes();
-
-        if nodes.len() == 1 {
-            nodes.swap_remove(0)
-        } else {
-            dom::elem("html".to_string(), HashMap::new(), nodes)
-        }
-    }
-
 }
 
 
 #[cfg(test)]
 mod tests {
-    use super::Parser;
+    use super::parse;
     use crate::dom::{elem, Node, text};
     use std::collections::HashMap;
 
@@ -165,7 +165,7 @@ mod tests {
     #[test]
     fn parse_only_html_tag() {
         let target_str = "<html></html>".to_string();
-        let parsed_dom = Parser::parse(target_str);
+        let parsed_dom = parse(target_str);
         let expected_dom = elem("html".to_string(), HashMap::new(),vec![]);
         assert_eq!(parsed_dom, expected_dom);
     }
@@ -173,7 +173,7 @@ mod tests {
     #[test]
     fn parse_html_and_body() {
         let target_str = "<html><body></body></html>".to_string();
-        let parsed_dom = Parser::parse(target_str);
+        let parsed_dom = parse(target_str);
         let expected_dom = elem("html".to_string(), HashMap::new(),vec![elem("body".to_string(), HashMap::new(), vec![])]);
         assert_eq!(parsed_dom, expected_dom);
     }
@@ -181,7 +181,7 @@ mod tests {
     #[test]
     fn parse_one_div_element_dom() {
         let target_str = "<html><body><div></div></body></html>".to_string();
-        let parsed_dom = Parser::parse(target_str);
+        let parsed_dom = parse(target_str);
         let expected_dom = elem("html".to_string(), HashMap::new(),vec![elem("body".to_string(), HashMap::new(), vec![elem("div".to_string(), HashMap::new(), vec![])])]);
         assert_eq!(parsed_dom, expected_dom);
     }
@@ -189,7 +189,7 @@ mod tests {
     #[test]
     fn parse_multi_div_element_dom() {
         let target_str = "<html><body><div></div><div></div><div></div></body></html>".to_string();
-        let parsed_dom = Parser::parse(target_str);
+        let parsed_dom = parse(target_str);
         let expected_dom = elem("html".to_string(), HashMap::new(),vec![elem("body".to_string(), HashMap::new(), vec![create_div_element(), create_div_element(), create_div_element()])]);
         assert_eq!(parsed_dom, expected_dom);
     }
@@ -197,7 +197,7 @@ mod tests {
     #[test]
     fn parse_text_node_dom() {
         let target_str = "<html><body><div>sample text</div></body></html>".to_string();
-        let parsed_dom = Parser::parse(target_str);
+        let parsed_dom = parse(target_str);
         let expected_dom = elem("html".to_string(), HashMap::new(),vec![
             elem("body".to_string(), HashMap::new(), vec![
                 elem("div".to_string(), HashMap::new(), vec![
@@ -211,7 +211,7 @@ mod tests {
     #[test]
     fn parse_comment_node_dom() {
         let target_str = "<html><body><!-- sample comment --><div></div></body></html>".to_string();
-        let parsed_dom = Parser::parse(target_str);
+        let parsed_dom = parse(target_str);
         let expected_dom = elem("html".to_string(), HashMap::new(),vec![elem("body".to_string(), HashMap::new(), vec![elem("div".to_string(), HashMap::new(), vec![])])]);
         assert_eq!(parsed_dom, expected_dom);
     }

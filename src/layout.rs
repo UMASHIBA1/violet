@@ -10,29 +10,29 @@ use std::rc::Rc;
 #[derive(Default,Clone, Debug, PartialEq)]
 pub struct Dimensions {
     // document originに対するコンテンツエリアのポジション
-    content: Rect,
-    padding: EdgeSize,
-    border: EdgeSize,
-    margin: EdgeSize
+    pub content: Rect,
+    pub padding: EdgeSize,
+    pub border: EdgeSize,
+    pub margin: EdgeSize
 }
 #[derive(Default,Clone, Debug, PartialEq)]
-struct Rect {
-    x: f32,
-    y: f32,
-    width: f32,
-    height: f32
+pub struct Rect {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32
 }
 
 #[derive(Default,Clone, Debug, PartialEq)]
-struct EdgeSize {
-    left: f32,
-    right: f32,
-    top: f32,
-    bottom: f32
+pub struct EdgeSize {
+    pub left: f32,
+    pub right: f32,
+    pub top: f32,
+    pub bottom: f32
 }
 
 #[derive(Clone, Debug, PartialEq)]
-enum BoxType<'a> {
+pub enum BoxType<'a> {
     BlockNode(&'a StyledNode<'a>),
     InlineNode(&'a StyledNode<'a>),
     AnonymousBlock
@@ -40,9 +40,9 @@ enum BoxType<'a> {
 
 #[derive(Clone, Debug, PartialEq, )]
 pub struct LayoutBox<'a> {
-    dimensions: Rc<RefCell<Dimensions>>,
-    box_type: BoxType<'a>,
-    children: Vec<LayoutBox<'a>>,
+    pub dimensions: Rc<RefCell<Dimensions>>,
+    pub box_type: BoxType<'a>,
+    pub children: Vec<LayoutBox<'a>>,
 }
 
 
@@ -246,23 +246,23 @@ impl<'a> LayoutBox<'a> {
 }
 
 impl Dimensions {
-    fn padding_box(&self) -> Rect {
+    pub fn padding_box(&self) -> Rect {
         self.content.expanded_by(&self.padding)
     }
 
-    fn border_box(&self) -> Rect {
+    pub fn border_box(&self) -> Rect {
         self.padding_box().expanded_by(&self.border)
     }
 
     // marginまで含めたx,y,width,heightの値を返す
-    fn margin_box(&self) -> Rect {
+    pub fn margin_box(&self) -> Rect {
         self.border_box().expanded_by(&self.margin)
     }
 }
 
 impl Rect {
     // 現在のRectのそれぞれのプロパティに対してedgeの値を足す
-    fn expanded_by(&self, edge: &EdgeSize) -> Rect {
+    pub fn expanded_by(&self, edge: &EdgeSize) -> Rect {
         Rect {
             x: self.x - edge.left,
             y: self.y - edge.top,
