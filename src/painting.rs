@@ -32,6 +32,7 @@ fn build_display_list(layout_root: &LayoutBox) -> DisplayList {
 }
 
 fn render_layout_box(list: &mut DisplayList, layout_box: &LayoutBox) {
+    // NOTE:
     render_background(list, layout_box);
     render_borders(list, layout_box);
     // TODO: render text
@@ -47,6 +48,7 @@ fn render_background(list: &mut DisplayList, layout_box: &LayoutBox) {
     );
 }
 
+// NOTE: LayoutBoxが持っている色のプロパティを取得
 fn get_color(layout_box: &LayoutBox, name: &str) -> Option<Color> {
     match layout_box.box_type {
         BoxType::BlockNode(style) | BoxType::InlineNode(style) => match style.value(name) {
@@ -133,3 +135,12 @@ impl Canvas {
         }
     }
 }
+
+
+// NOTE: 自分なりに処理の手順メモ
+// 目標: 最終的にCanvasオブジェクト内にwindowのwidthとheightの大きさ
+// に対応した1pixelごとの色のリストを作成したい
+// 手順
+// 1. DisplayCommandを作成することでx,y,width,height,colorを一つのオブジェクトにまとめDisplayListに追加する
+// 2. 1.をLayoutBoxのchildrenに対して繰り返す(childrenでもparentの入ってるDisplayListにpushする)
+// 3. DisplayListの各要素に対してループを回してwidth,height,x,yから各ピクセルのcolorを計算しCanvasのpixelsに追加
