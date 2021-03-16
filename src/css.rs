@@ -85,8 +85,6 @@ impl Selector {
     }
 }
 
-
-
 struct Parser {
     pos: usize,
     input: String

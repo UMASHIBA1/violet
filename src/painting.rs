@@ -95,8 +95,6 @@ fn render_borders(list: &mut DisplayList, layout_box: &LayoutBox) {
 
 }
 
-
-
 impl Canvas {
     fn new(width: usize, height: usize) -> Canvas {
         let white = Color {r: 255, g: 255, b: 255, a: 255};
@@ -144,3 +142,4 @@ impl Canvas {
 // 1. DisplayCommandを作成することでx,y,width,height,colorを一つのオブジェクトにまとめDisplayListに追加する
 // 2. 1.をLayoutBoxのchildrenに対して繰り返す(childrenでもparentの入ってるDisplayListにpushする)
 // 3. DisplayListの各要素に対してループを回してwidth,height,x,yから各ピクセルのcolorを計算しCanvasのpixelsに追加
+

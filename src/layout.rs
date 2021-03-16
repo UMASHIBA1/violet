@@ -287,12 +287,12 @@ mod tests {
     // margin, border, padding, width, height, x, y
 
     fn create_element_node(tag_name: String, attributes: AttrMap, children: Vec<Node>) -> Node {
-        let this_element = NodeType::Element(ElementData {tag_name, attributes});
-        Node {node_type: this_element, children}
+        let this_element = NodeType::Element(ElementData { tag_name, attributes });
+        Node { node_type: this_element, children }
     }
 
     fn create_styled_node<'a>(node: &'a Node, specified_values: PropertyMap, children: Vec<StyledNode<'a>>) -> StyledNode<'a> {
-        StyledNode {node, specified_values, children}
+        StyledNode { node, specified_values, children }
     }
 
     fn create_viewport() -> Rc<RefCell<Dimensions>> {
@@ -319,9 +319,9 @@ mod tests {
                 width: 0.0,
                 height: 0.0
             },
-            margin: create_edge_size(None,None,None,None),
-            border: create_edge_size(None,None,None,None),
-            padding: create_edge_size(None,None,None,None),
+            margin: create_edge_size(None, None, None, None),
+            border: create_edge_size(None, None, None, None),
+            padding: create_edge_size(None, None, None, None),
         };
         LayoutBox {
             dimensions: Rc::new(RefCell::new(dimension)),
@@ -329,6 +329,42 @@ mod tests {
             children
         }
     }
+
+    // NOTE: LayoutBoxの構造体例
+    // LayoutBox {
+    //   dimensions: {
+    //      content: {
+    //          x: 0.0,
+    //          y: 0.0,
+    //          width: 100.0,
+    //          height: 200.0
+    //      },
+    //      padding: {
+    //          left: 1.0,
+    //          right: 1.0,
+    //          top: 3.0,
+    //          bottom: 3.0
+    //      },
+    //      border: {
+    //          left: 0.0,
+    //          right: 0.0,
+    //          top: 0.0,
+    //          bottom: 0.0
+    //      },
+    //      margin: {
+    //          left: 4.0,
+    //          right: 4.0,
+    //          top: 4.0,
+    //          bottom: 4.0
+    //      }
+    //   },
+    //   box_type: BlockNode(StyledNode{
+    //          node: Node{...},
+    //          specified_values: {margin: Px(2)},
+    //          children: StyledNode{...}
+    //   }),
+    //   children: [LayoutBox{...}, LayoutBox{...}]
+    // }
 
     #[test]
     fn test_layout_only_block_node_tree() {
