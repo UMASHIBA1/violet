@@ -1,13 +1,12 @@
 [package]
-name = "violet"
+name = "native"
 version = "0.1.0"
 authors = ["UMASHIBA <umashiba1@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace]
-members = [
-    "core",
-    "native",
-]
+[dependencies]
+getopts = "0.2.21"
+image = "0.23.14"
+core = { path = "../core" }

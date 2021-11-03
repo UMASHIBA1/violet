@@ -1,7 +1,7 @@
 // NOTE: 参考: https://limpet.net/mbrubeck/2014/08/13/toy-layout-engine-3-css.html
 // https://github.com/mbrubeck/robinson/blob/master/src/css.rs
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Stylesheet {
     pub rules: Vec<Rule>
 }
